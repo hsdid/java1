@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -26,9 +27,20 @@ public class AuthorService {
         return AuthorResponse.from(savedAuthor);
     }
 
+    //Metoda nie rzuca wyjatku LazyInitializationException dzieki transakjcji ale jest n + 1
+
+//    @Transactional(readOnly = true)
+//    public List<AuthorResponse> getAll() {
+//        return authorRepository.findAll().stream()
+//                .map(AuthorResponse::from)
+//                .toList();
+//    }
+
+
+    // metoda zwraca authorow z iloscią ksiązek bez n + 1
     @Transactional(readOnly = true)
     public List<AuthorResponse> getAll() {
-        return authorRepository.findAll().stream()
+        return authorRepository.findAllWithBooks().stream()
                 .map(AuthorResponse::from)
                 .toList();
     }
@@ -40,11 +52,7 @@ public class AuthorService {
                         "Author with id " + id + " not found"
                 ));
 
-        return new AuthorResponse(
-                author.getId(),
-                author.getFirstName(),
-                author.getLastName()
-        );
+        return AuthorResponse.from(author);
     }
 
     /// /    @Transactional
@@ -83,20 +91,20 @@ public class AuthorService {
 //        log.info("-----------------------");
 //    }
 
-    @Transactional
-    public void playWithTransactions() {
-        log.info("-----------------------");
-        Author a1 = authorRepository.findById(1L).get();
-        a1.setFirstName("zmienione");
-        authorRepository.saveAndFlush(a1);
-        try {
-            Thread.sleep(15000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        log.info("-----------------------");
-        throw new IllegalStateException("Wycofanie transakcji");
-    }
+//    @Transactional
+//    public void playWithTransactions() {
+//        log.info("-----------------------");
+//        Author a1 = authorRepository.findById(1L).get();
+//        a1.setFirstName("zmienione");
+//        authorRepository.saveAndFlush(a1);
+//        try {
+//            Thread.sleep(15000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        log.info("-----------------------");
+//        throw new IllegalStateException("Wycofanie transakcji");
+//    }
 
     //todo
     // poziomy izolacji
@@ -104,5 +112,63 @@ public class AuthorService {
     // rollbackFor i noRollbackFor
     // co zrobi SneakyThrows przy Exception
     // spróbuj pobrać wszystkich autorów z iloscią ksiązek, sprobuj, zobacz jakie bledy po kolei wyskakuja itp
-    // wrzucic na github
+
+
+    // Checked Exceptions Domyślnie NIE wycofują (nie robią rollbacku)
+    // Unchecked Exceptions (niesprawdzane – dziedziczące po RuntimeException): Domyślnie wycofują (robią rollback) transakcję.
+
+
+    //  Ustawienie unchecked exceptions zeby nie wycofywal transakcji przez dodanie noRollbackFor
+
+//    @Transactional(noRollbackFor = IllegalStateException.class)
+//    public void playWithTransactions() {
+//        log.info("-----------------------");
+//        Author a1 = authorRepository.findById(1L).get();
+//        a1.setFirstName("zmienione");
+//        authorRepository.saveAndFlush(a1);
+//        try {
+//            Thread.sleep(15000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        log.info("-----------------------");
+//        throw new IllegalStateException("Wycofanie transakcji");
+//    }
+
+//      Ustawienie checked exceptions zeby  wycofywal transakcji przez dodanie rollbackFor
+//    @Transactional(rollbackFor = IOException.class)
+//    public void playWithTransactions() throws IOException {
+//        log.info("-----------------------");
+//        Author a1 = authorRepository.findById(1L).get();
+//        a1.setFirstName("zmienione1");
+//        authorRepository.saveAndFlush(a1);
+//        try {
+//            Thread.sleep(15000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+//        log.info("-----------------------");
+//        throw new IOException("Wycofanie transakcji");
+//    }
+
+
+    // SNEAKY THROWS
+    // @SneakyThrows sprawia, że wyjątek checked (np. Exception) zachowuje się w locie bajtowym jak wyjątek niesprawdzany,
+    // Spring potraktuje go tak samo jak RuntimeException i wykona wycofanie transakcji (rollback).
+
+    @Transactional
+    @SneakyThrows
+    public void playWithTransactions() {
+        log.info("-----------------------");
+        Author a1 = authorRepository.findById(1L).get();
+        a1.setFirstName("zmienione1");
+        authorRepository.saveAndFlush(a1);
+        try {
+            Thread.sleep(15000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        log.info("-----------------------");
+        throw new IOException("Wycofanie transakcji");
+    }
 }
