@@ -8,12 +8,13 @@ import org.example.dto.response.AuthorResponse;
 import org.example.exception.AuthorNotFoundException;
 import org.example.model.Author;
 import org.example.repository.AuthorRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -39,10 +40,8 @@ public class AuthorService {
 
     // metoda zwraca authorow z iloscią ksiązek bez n + 1
     @Transactional(readOnly = true)
-    public List<AuthorResponse> getAll() {
-        return authorRepository.findAllWithBooks().stream()
-                .map(AuthorResponse::from)
-                .toList();
+    public Page<AuthorResponse> getAll(Pageable pageable) {
+        return authorRepository.findAllWithBooks(pageable);
     }
 
     @Transactional(readOnly = true, isolation = Isolation.READ_UNCOMMITTED)
