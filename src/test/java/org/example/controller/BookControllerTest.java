@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.Main;
 import org.example.dto.request.CreateBookRequest;
@@ -66,17 +67,17 @@ class BookControllerTest {
         bookRepository.saveAndFlush(new Book("Title2", "LEKTURA2", true, author));
         bookRepository.saveAndFlush(new Book("Title3", "LEKTURA3", true, author));
 
-        String responseJson = postman.perform(get("/api/v1/books"))
+        String responseJson = postman.perform(get("/api/v1/books")
+                        .param("size", "3")
+                        .param("sort", "id,desc"))
                 .andExpect(status().isOk())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
 
-        List<BookResponse> books = objectMapper.readValue(
-                responseJson,
-                new TypeReference<>() {
-                }
-        );
+        JsonNode content = objectMapper.readTree(responseJson).get("content");
+        List<BookResponse> books = objectMapper.convertValue(content, new TypeReference<>() {
+        });
 
         assertThat(books).hasSize(3)
                 .extracting(BookResponse::title)
