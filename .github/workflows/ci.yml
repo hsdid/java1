@@ -72,13 +72,17 @@ jobs:
           awk -F, 'NR>1 {
             mi+=$4; ci+=$5; mb+=$6; cb+=$7; ml+=$8; cl+=$9
           } END {
+            ti = ci + mi; tb = cb + mb; tl = cl + ml
             miss = mi + mb + ml; cov = ci + cb + cl
+            pi = ti > 0 ? ci * 100 / ti : 0
+            pb = tb > 0 ? cb * 100 / tb : 0
+            pl = tl > 0 ? cl * 100 / tl : 0
             pct = (miss + cov) > 0 ? cov * 100 / (miss + cov) : 0
             printf "## JaCoCo Coverage\n\n"
             printf "| Metric | Covered | Total | %% |\n"
             printf "| --- | --- | --- | --- |\n"
-            printf "| Instructions | %d | %d | %.1f%% |\n", ci, ci+mi, (ci+mi)>0 ? ci*100/(ci+mi) : 0
-            printf "| Branches | %d | %d | %.1f%% |\n", cb, cb+mb, (cb+mb)>0 ? cb*100/(cb+mb) : 0
-            printf "| Lines | %d | %d | %.1f%% |\n", cl, cl+ml, (cl+ml)>0 ? cl*100/(cl+ml) : 0
+            printf "| Instructions | %d | %d | %.1f%% |\n", ci, ti, pi
+            printf "| Branches | %d | %d | %.1f%% |\n", cb, tb, pb
+            printf "| Lines | %d | %d | %.1f%% |\n", cl, tl, pl
             printf "\n**Total coverage: %.1f%%**\n", pct
           }' "$CSV" >> "$GITHUB_STEP_SUMMARY"
