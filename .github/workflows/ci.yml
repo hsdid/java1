@@ -52,3 +52,33 @@ jobs:
           name: test-results
           path: target/surefire-reports/
           if-no-files-found: ignore
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+          if-no-files-found: ignore
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          CSV=target/site/jacoco/jacoco.csv
+          if [ ! -f "$CSV" ]; then
+            echo "No JaCoCo report found." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          awk -F, 'NR>1 {
+            mi+=$4; ci+=$5; mb+=$6; cb+=$7; ml+=$8; cl+=$9
+          } END {
+            miss = mi + mb + ml; cov = ci + cb + cl
+            pct = (miss + cov) > 0 ? cov * 100 / (miss + cov) : 0
+            printf "## JaCoCo Coverage\n\n"
+            printf "| Metric | Covered | Total | %% |\n"
+            printf "| --- | --- | --- | --- |\n"
+            printf "| Instructions | %d | %d | %.1f%% |\n", ci, ci+mi, (ci+mi)>0 ? ci*100/(ci+mi) : 0
+            printf "| Branches | %d | %d | %.1f%% |\n", cb, cb+mb, (cb+mb)>0 ? cb*100/(cb+mb) : 0
+            printf "| Lines | %d | %d | %.1f%% |\n", cl, cl+ml, (cl+ml)>0 ? cl*100/(cl+ml) : 0
+            printf "\n**Total coverage: %.1f%%**\n", pct
+          }' "$CSV" >> "$GITHUB_STEP_SUMMARY"
