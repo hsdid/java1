@@ -8,6 +8,7 @@ import org.example.dto.response.AuthorResponse;
 import org.example.exception.AuthorNotFoundException;
 import org.example.model.Author;
 import org.example.repository.AuthorRepository;
+import org.example.support.AuthorPageableSortTranslator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,14 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class AuthorService {
     private final AuthorRepository authorRepository;
+    private final AuthorPageableSortTranslator sortTranslator;
 
 
     public AuthorResponse create(CreateAuthorRequest request) {
@@ -41,7 +44,8 @@ public class AuthorService {
     // metoda zwraca authorow z iloscią ksiązek bez n + 1
     @Transactional(readOnly = true)
     public Page<AuthorResponse> getAll(Pageable pageable) {
-        return authorRepository.findAllWithBooks(pageable);
+        Pageable pageableTranslated = sortTranslator.translate(pageable);
+        return authorRepository.findAllWithBooks(pageableTranslated);
     }
 
     @Transactional(readOnly = true, isolation = Isolation.READ_UNCOMMITTED)

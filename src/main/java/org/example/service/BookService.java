@@ -13,6 +13,7 @@ import org.example.model.Author;
 import org.example.model.Book;
 import org.example.repository.AuthorRepository;
 import org.example.repository.BookRepository;
+import org.example.support.BookPageableSortTranslator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.List;
 public class BookService {
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
+    private final BookPageableSortTranslator sortTranslator;
 
     @PostConstruct
     public void init() {
@@ -106,7 +108,8 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public Page<BookResponse> getAll(Pageable pageable) {
-        return bookRepository.findAllWithAuthor(pageable).map(BookResponse::from);
+        Pageable sort = sortTranslator.translate(pageable);
+        return bookRepository.findAllWithAuthor(sort).map(BookResponse::from);
     }
 
     @Transactional(readOnly = true)

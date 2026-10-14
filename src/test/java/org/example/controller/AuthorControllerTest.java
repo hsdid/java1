@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -126,6 +127,50 @@ class AuthorControllerTest {
 
         List<AuthorResponse> authors = readContent(body);
         assertThat(authors).hasSize(1);
+    }
+
+    @Test
+    void shouldSortByNumberOfBooksFieldThatIsNotInEntity() throws Exception {
+        Author fewBooks = authorRepository.saveAndFlush(new Author("Ala", "FewBooks", 1900, 2000));
+        bookRepository.saveAndFlush(new Book("FewBook1", "LEKTURA", true, fewBooks));
+
+        Author manyBooks = authorRepository.saveAndFlush(new Author("Bea", "ManyBooks", 1901, 2001));
+        bookRepository.saveAndFlush(new Book("ManyBook1", "LEKTURA", true, manyBooks));
+        bookRepository.saveAndFlush(new Book("ManyBook2", "LEKTURA", true, manyBooks));
+        bookRepository.saveAndFlush(new Book("ManyBook3", "LEKTURA", true, manyBooks));
+
+        List<AuthorResponse> desc = getAuthorsSortedBy("numberOfBooks,desc");
+        List<Integer> descCounts = desc.stream().map(AuthorResponse::numberOfBooks).toList();
+        assertThat(descCounts).isSortedAccordingTo(Comparator.reverseOrder());
+        assertThat(indexOfAuthor(desc, manyBooks.getId()))
+                .isLessThan(indexOfAuthor(desc, fewBooks.getId()));
+
+        List<AuthorResponse> asc = getAuthorsSortedBy("numberOfBooks,asc");
+        List<Integer> ascCounts = asc.stream().map(AuthorResponse::numberOfBooks).toList();
+        assertThat(ascCounts).isSorted();
+        assertThat(indexOfAuthor(asc, fewBooks.getId()))
+                .isLessThan(indexOfAuthor(asc, manyBooks.getId()));
+    }
+
+    private List<AuthorResponse> getAuthorsSortedBy(String sort) throws Exception {
+        String body = postman.perform(get("/api/v1/authors")
+                        .param("size", "1000")
+                        .param("sort", sort))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return readContent(body);
+    }
+
+    private int indexOfAuthor(List<AuthorResponse> authors, Long id) {
+        for (int i = 0; i < authors.size(); i++) {
+            if (authors.get(i).id().equals(id)) {
+                return i;
+            }
+        }
+        throw new AssertionError("Author with id " + id + " not found in response");
     }
 
     private List<AuthorResponse> readContent(String body) throws Exception {

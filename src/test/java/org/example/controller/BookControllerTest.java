@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Comparator;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -260,6 +261,49 @@ class BookControllerTest {
                 .andExpect(jsonPath("$.errors[?(@.field == 'authorId')]").isNotEmpty())
                 .andExpect(jsonPath("$.errors[?(@.field == 'category')]").isNotEmpty())
                 .andExpect(jsonPath("$.errors[?(@.field == 'available')]").isNotEmpty());
+    }
+
+    @Test
+    void shouldSortByAuthorIdFieldThatIsNotInEntity() throws Exception {
+        Author first = authorRepository.saveAndFlush(new Author("First", "Sorter", 1900, 2000));
+        Author second = authorRepository.saveAndFlush(new Author("Second", "Sorter", 1901, 2001));
+        bookRepository.saveAndFlush(new Book("SortBookFirst", "LEKTURA", true, first));
+        bookRepository.saveAndFlush(new Book("SortBookSecond", "LEKTURA", true, second));
+
+        List<BookResponse> desc = getBooksSortedBy("authorId,desc");
+        List<Long> descAuthorIds = desc.stream().map(BookResponse::authorId).toList();
+        assertThat(descAuthorIds).isSortedAccordingTo(Comparator.reverseOrder());
+        assertThat(indexOfAuthorId(desc, second.getId()))
+                .isLessThan(indexOfAuthorId(desc, first.getId()));
+
+        List<BookResponse> asc = getBooksSortedBy("authorId,asc");
+        List<Long> ascAuthorIds = asc.stream().map(BookResponse::authorId).toList();
+        assertThat(ascAuthorIds).isSorted();
+        assertThat(indexOfAuthorId(asc, first.getId()))
+                .isLessThan(indexOfAuthorId(asc, second.getId()));
+    }
+
+    private List<BookResponse> getBooksSortedBy(String sort) throws Exception {
+        String body = postman.perform(get("/api/v1/books")
+                        .param("size", "1000")
+                        .param("sort", sort))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode content = objectMapper.readTree(body).get("content");
+        return objectMapper.convertValue(content, new TypeReference<>() {
+        });
+    }
+
+    private int indexOfAuthorId(List<BookResponse> books, Long authorId) {
+        for (int i = 0; i < books.size(); i++) {
+            if (books.get(i).authorId().equals(authorId)) {
+                return i;
+            }
+        }
+        throw new AssertionError("Book with authorId " + authorId + " not found in response");
     }
 
     @Test
