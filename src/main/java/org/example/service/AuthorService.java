@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -40,12 +39,11 @@ public class AuthorService {
 //                .toList();
 //    }
 
-
     // metoda zwraca authorow z iloscią ksiązek bez n + 1
     @Transactional(readOnly = true)
     public Page<AuthorResponse> getAll(Pageable pageable) {
-        Pageable pageableTranslated = sortTranslator.translate(pageable);
-        return authorRepository.findAllWithBooks(pageableTranslated);
+//        Pageable pageableTranslated = sortTranslator.translate(pageable);
+        return authorRepository.findAllWithBooks(pageable);
     }
 
     @Transactional(readOnly = true, isolation = Isolation.READ_UNCOMMITTED)

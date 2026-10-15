@@ -21,8 +21,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import jakarta.persistence.EntityManagerFactory;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
+
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -46,6 +51,29 @@ class BookControllerTest {
 
     @Autowired
     private MockMvc postman;
+
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
+
+    @Test
+    void shouldNotProduceNPlusOneQueriesWhenListingBooks() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            Author author = authorRepository.saveAndFlush(new Author("NPlus1", "Author" + i, 1900 + i, 2000));
+            bookRepository.saveAndFlush(new Book("NPlus1Book" + i, "LEKTURA", true, author));
+        }
+
+        Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
+        statistics.clear();
+
+        postman.perform(get("/api/v1/books")
+                        .param("size", "1000"))
+                .andExpect(status().isOk());
+
+        long statements = statistics.getPrepareStatementCount();
+        assertThat(statements)
+                .as("listing books must not lazily load each author separately (n+1)")
+                .isLessThanOrEqualTo(3);
+    }
 
     @Test
     void shouldReturnSingleBook() throws Exception {
@@ -281,6 +309,60 @@ class BookControllerTest {
         assertThat(ascAuthorIds).isSorted();
         assertThat(indexOfAuthorId(asc, first.getId()))
                 .isLessThan(indexOfAuthorId(asc, second.getId()));
+    }
+
+    @Test
+    void shouldFilterBooksByEachField() throws Exception {
+        Author author = authorRepository.saveAndFlush(new Author("Filter", "Owner", 1900, 2000));
+        Author other = authorRepository.saveAndFlush(new Author("Other", "Owner", 1901, 2001));
+        bookRepository.saveAndFlush(new Book("UniqueFilterTitle", "UNIQUE_CAT", true, author));
+        bookRepository.saveAndFlush(new Book("AnotherFilterBook", "OTHER_CAT", false, other));
+
+        List<BookResponse> byTitle = getBooksFiltered(Map.of("title", "UniqueFilterTitle"));
+        assertThat(byTitle).extracting(BookResponse::title).containsExactly("UniqueFilterTitle");
+
+        List<BookResponse> byCategory = getBooksFiltered(Map.of("category", "UNIQUE_CAT"));
+        assertThat(byCategory).isNotEmpty()
+                .extracting(BookResponse::category).containsOnly("UNIQUE_CAT");
+
+        List<BookResponse> byAuthor = getBooksFiltered(Map.of("authorId", author.getId().toString()));
+        assertThat(byAuthor).isNotEmpty()
+                .extracting(BookResponse::authorId).containsOnly(author.getId());
+
+        List<BookResponse> byAvailable = getBooksFiltered(Map.of("available", "false"));
+        assertThat(byAvailable).isNotEmpty()
+                .extracting(BookResponse::available).containsOnly(false);
+
+        List<BookResponse> combined = getBooksFiltered(Map.of(
+                "title", "UniqueFilterTitle",
+                "category", "UNIQUE_CAT",
+                "authorId", author.getId().toString(),
+                "available", "true"
+        ));
+        assertThat(combined).extracting(BookResponse::title).containsExactly("UniqueFilterTitle");
+    }
+
+    @Test
+    void shouldReturnEmptyPageWhenFilterMatchesNothing() throws Exception {
+        List<BookResponse> books = getBooksFiltered(Map.of("title", "NoSuchBookTitleXyz"));
+        assertThat(books).isEmpty();
+    }
+
+    private List<BookResponse> getBooksFiltered(Map<String, String> params) throws Exception {
+        var request = get("/api/v1/books").param("size", "1000");
+        for (Map.Entry<String, String> param : params.entrySet()) {
+            request = request.param(param.getKey(), param.getValue());
+        }
+
+        String body = postman.perform(request)
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        JsonNode content = objectMapper.readTree(body).get("content");
+        return objectMapper.convertValue(content, new TypeReference<>() {
+        });
     }
 
     private List<BookResponse> getBooksSortedBy(String sort) throws Exception {

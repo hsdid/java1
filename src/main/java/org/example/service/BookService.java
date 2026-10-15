@@ -2,6 +2,7 @@ package org.example.service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.request.CreateBookRequest;
 import org.example.dto.request.PatchBookRequest;
 import org.example.dto.request.UpdateBookRequest;
@@ -14,13 +15,18 @@ import org.example.model.Book;
 import org.example.repository.AuthorRepository;
 import org.example.repository.BookRepository;
 import org.example.support.BookPageableSortTranslator;
+import org.example.support.BookSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookService {
@@ -37,23 +43,18 @@ public class BookService {
         bookRepository.saveAndFlush(new Book("Title3", "LEKTURA", true, a2));
     }
 
-    @Transactional
-    public BookResponse createBook(CreateBookRequest request) {
-        if (bookRepository.existsByTitle(request.title())) {
-            throw new BookTitleAlreadyExistsException(request.title());
-        }
 
+    public BookResponse createBook(CreateBookRequest request) {
         Author author = authorRepository.findById(request.authorId())
                 .orElseThrow(() -> new AuthorNotFoundException(
                         "Author with id " + request.authorId() + " not found"
                 ));
 
-
         Book savedBook = bookRepository.save(
                 new Book(
                         request.title(),
                         request.category(),
-                        request.available(),
+                        true,
                         author
                 )
         );
@@ -107,9 +108,21 @@ public class BookService {
     }
 
     @Transactional(readOnly = true)
-    public Page<BookResponse> getAll(Pageable pageable) {
+    public Page<BookResponse> getAll(
+            Pageable pageable,
+            String title,
+            String category,
+            Long authorId,
+            Boolean available
+    ) {
         Pageable sort = sortTranslator.translate(pageable);
-        return bookRepository.findAllWithAuthor(sort).map(BookResponse::from);
+
+        Specification<Book> spec = Specification.where(BookSpecifications.hasTitle(title))
+                .and(BookSpecifications.hasCategory(category))
+                .and(BookSpecifications.hasAuthorId(authorId))
+                .and(BookSpecifications.isAvailable(available));
+
+        return bookRepository.findAll(spec, sort).map(BookResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -120,5 +133,26 @@ public class BookService {
                 ));
 
         return BookResponse.from(book);
+    }
+
+    @Transactional
+    public void importBooks(byte[] bytes) {
+        String content = new String(bytes);
+
+        AtomicInteger counter = new AtomicInteger(0);
+        AtomicLong start = new AtomicLong(System.currentTimeMillis());
+
+        Arrays.stream(content.split("\r\n"))
+                .map(line -> line.split(","))
+                .map(args -> new CreateBookRequest(args[0], Long.parseLong(args[2]), args[1]))
+                .peek(command -> countTime(counter, start))
+                .forEach(this::createBook);
+    }
+
+    private void countTime(AtomicInteger counter, AtomicLong start) {
+        if(counter.incrementAndGet() % 10000 == 0) {
+            log.info("imported: {} in {} ms", counter, (System.currentTimeMillis() - start.get()));
+            start.set(System.currentTimeMillis());
+        }
     }
 }

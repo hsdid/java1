@@ -9,11 +9,11 @@ public class BookPageableSortTranslator extends BasePageableSortTranslator {
     @Override
     protected Map<String, String> getAllowedSortFields() {
         return Map.of(
-                "id", "b.id",
-                "title", "b.title",
-                "authorId", "b.author.id",
-                "category", "b.category",
-                "available", "b.available"
+                "id", "id",
+                "title", "title",
+                "authorId", "author.id",
+                "category", "category",
+                "available", "available"
         );
     }
 }
