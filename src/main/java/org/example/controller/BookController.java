@@ -14,9 +14,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 @RequiredArgsConstructor
 @RestController
@@ -34,21 +31,28 @@ public class BookController {
 //    }
 
     @GetMapping
-    public ResponseEntity<Page<BookResponse>> getBooks(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) Long authorId,
-            @RequestParam(required = false) Boolean available,
-            @PageableDefault Pageable pageable
-    ) {
-        return ResponseEntity.ok(bookService.getAll(
-                pageable,
-                title,
-                category,
-                authorId,
-                available
-        ));
+    public ResponseEntity<Page<BookResponse>> getBooks(@PageableDefault Pageable pageable){
+        log.info("findAllBooks()");
+        return ResponseEntity.ok(bookService.getAllBooks(pageable));
+
     }
+
+//    @GetMapping
+//    public ResponseEntity<Page<BookResponse>> getBooks(
+//            @RequestParam(required = false) String title,
+//            @RequestParam(required = false) String category,
+//            @RequestParam(required = false) Long authorId,
+//            @RequestParam(required = false) Boolean available,
+//            @PageableDefault Pageable pageable
+//    ) {
+//        return ResponseEntity.ok(bookService.getAll(
+//                pageable,
+//                title,
+//                category,
+//                authorId,
+//                available
+//        ));
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<BookResponse> getBookByID(@PathVariable Long id) {
@@ -84,11 +88,6 @@ public class BookController {
             @PathVariable Long id
     ) {
         bookService.partialUpdate(request, id);
-    }
-
-    @PostMapping("/_import")
-    public void importBooks(@RequestPart("books") MultipartFile file) throws IOException {
-        bookService.importBooks(file.getBytes());
     }
 
 }

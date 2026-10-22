@@ -15,16 +15,10 @@ import org.example.model.Book;
 import org.example.repository.AuthorRepository;
 import org.example.repository.BookRepository;
 import org.example.support.BookPageableSortTranslator;
-import org.example.support.BookSpecifications;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
@@ -108,22 +102,27 @@ public class BookService {
     }
 
     @Transactional(readOnly = true)
-    public Page<BookResponse> getAll(
-            Pageable pageable,
-            String title,
-            String category,
-            Long authorId,
-            Boolean available
-    ) {
-        Pageable sort = sortTranslator.translate(pageable);
-
-        Specification<Book> spec = Specification.where(BookSpecifications.hasTitle(title))
-                .and(BookSpecifications.hasCategory(category))
-                .and(BookSpecifications.hasAuthorId(authorId))
-                .and(BookSpecifications.isAvailable(available));
-
-        return bookRepository.findAll(spec, sort).map(BookResponse::from);
+    public Page<BookResponse> getAllBooks(Pageable pageable) {
+       return bookRepository.findAll(pageable).map(BookResponse::from);
     }
+//
+//    @Transactional(readOnly = true)
+//    public Page<BookResponse> getAll(
+//            Pageable pageable,
+//            String title,
+//            String category,
+//            Long authorId,
+//            Boolean available
+//    ) {
+//        Pageable sort = sortTranslator.translate(pageable);
+//
+//        Specification<Book> spec = Specification.where(BookSpecifications.hasTitle(title))
+//                .and(BookSpecifications.hasCategory(category))
+//                .and(BookSpecifications.hasAuthorId(authorId))
+//                .and(BookSpecifications.isAvailable(available));
+//
+//        return bookRepository.findAll(spec, sort).map(BookResponse::from);
+//    }
 
     @Transactional(readOnly = true)
     public BookResponse getById(Long id) {
@@ -135,24 +134,5 @@ public class BookService {
         return BookResponse.from(book);
     }
 
-    @Transactional
-    public void importBooks(byte[] bytes) {
-        String content = new String(bytes);
 
-        AtomicInteger counter = new AtomicInteger(0);
-        AtomicLong start = new AtomicLong(System.currentTimeMillis());
-
-        Arrays.stream(content.split("\r\n"))
-                .map(line -> line.split(","))
-                .map(args -> new CreateBookRequest(args[0], Long.parseLong(args[2]), args[1]))
-                .peek(command -> countTime(counter, start))
-                .forEach(this::createBook);
-    }
-
-    private void countTime(AtomicInteger counter, AtomicLong start) {
-        if(counter.incrementAndGet() % 10000 == 0) {
-            log.info("imported: {} in {} ms", counter, (System.currentTimeMillis() - start.get()));
-            start.set(System.currentTimeMillis());
-        }
-    }
 }
