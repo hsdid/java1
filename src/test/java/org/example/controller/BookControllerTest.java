@@ -129,8 +129,7 @@ class BookControllerTest {
         CreateBookRequest dto = new CreateBookRequest(
                 "Pan Tadeusz",
                 author.getId(),
-                "Lektura",
-                true
+                "Lektura"
         );
 
         String requestBody = objectMapper.writeValueAsString(dto);
@@ -262,7 +261,7 @@ class BookControllerTest {
         Author author = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
         bookRepository.saveAndFlush(new Book("Zajety Tytul", "LEKTURA", true, author));
 
-        CreateBookRequest dto = new CreateBookRequest("Zajety Tytul", author.getId(), "LEKTURA", true);
+        CreateBookRequest dto = new CreateBookRequest("Zajety Tytul", author.getId(), "LEKTURA");
         String requestBody = objectMapper.writeValueAsString(dto);
 
         postman.perform(post("/api/v1/books")
@@ -276,7 +275,7 @@ class BookControllerTest {
 
     @Test
     void shouldReturn400WhenCreateBookRequestIsInvalid() throws Exception {
-        CreateBookRequest dto = new CreateBookRequest("", null, "", null);
+        CreateBookRequest dto = new CreateBookRequest("", null, "");
         String requestBody = objectMapper.writeValueAsString(dto);
 
         postman.perform(post("/api/v1/books")
