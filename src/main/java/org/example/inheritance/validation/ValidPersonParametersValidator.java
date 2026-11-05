@@ -4,16 +4,16 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.dto.response.ErrorDetail;
 import org.example.inheritance.dto.command.CreatePersonCommand;
 import org.example.inheritance.factory.PersonFactory;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @AllArgsConstructor
 public class ValidPersonParametersValidator implements ConstraintValidator<ValidPersonParameters, CreatePersonCommand> {
-    private final List<PersonFactory> factories;
+    private final Map<String, PersonFactory> factories;
 
     @Override
     public boolean isValid(CreatePersonCommand command, ConstraintValidatorContext context) {
@@ -21,15 +21,8 @@ public class ValidPersonParametersValidator implements ConstraintValidator<Valid
             return true;
         }
 
-        List<String> errors = null;
-
-        for (PersonFactory factory : factories) {
-            if (factory.supports(command.personType())) {
-                errors = factory.validate(command);
-                break;
-            }
-        }
-
+        PersonFactory factory = factories.get(command.personType().toLowerCase() + "Factory");
+        List<String> errors = factory.validate(command);
 
         if (errors != null && !errors.isEmpty()) {
             for (String error : errors) {

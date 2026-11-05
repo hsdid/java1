@@ -1,39 +1,58 @@
 package org.example.inheritance.factory;
 
-import org.example.dto.response.ErrorDetail;
 import org.example.inheritance.dto.command.CreatePersonCommand;
-import org.example.inheritance.model.Person;
+import org.example.inheritance.dto.response.StudentResponse;
 import org.example.inheritance.model.PersonParameter;
 import org.example.inheritance.model.Student;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
-public class StudentFactory implements PersonFactory {
+@Component("studentFactory")
+public class StudentFactory implements PersonFactory<Student, StudentResponse> {
+//    @Override
+//    public Person create(CreatePersonCommand command) {
+//        Student student = new Student();
+//
+//        for (PersonParameter parameter : command.parameters()) {
+//            if (parameter.name().equals("name")) {
+//                student.setName(parameter.value());
+//            }
+//            if (parameter.name().equals("age")) {
+//                student.setAge(Integer.parseInt(parameter.value()));
+//            }
+//            if (parameter.name().equals("group")) {
+//                student.setGroup(parameter.value());
+//            }
+//            if (parameter.name().equals("scholarship")) {
+//                student.setScholarship(Integer.parseInt(parameter.value()));
+//            }
+//        }
+//
+//        return student;
+//    }
+
     @Override
-    public Person create(CreatePersonCommand command) {
+    public Student createPersonInternal(Map<String, String> parameters) {
         Student student = new Student();
-
-        for (PersonParameter parameter : command.parameters()) {
-            if (parameter.name().equals("name")) {
-                student.setName(parameter.value());
-            }
-            if (parameter.name().equals("age")) {
-                student.setAge(Integer.parseInt(parameter.value()));
-            }
-            if (parameter.name().equals("group")) {
-                student.setGroup(parameter.value());
-            }
-            if (parameter.name().equals("scholarship")) {
-                student.setScholarship(Integer.parseInt(parameter.value()));
-            }
-        }
-
+        student.setScholarship(Integer.parseInt(parameters.get("scholarship")));
+        student.setAge(Integer.parseInt(parameters.get("age")));
+        student.setName(parameters.get("name"));
+        student.setGroup(parameters.get("group"));
         return student;
+    }
+
+    @Override
+    public StudentResponse toResponse(Student student) {
+        return new StudentResponse(student.getId(),
+                student.getName(),
+                student.getAge(),
+                student.getGroup(),
+                student.getScholarship());
     }
 
     @Override
@@ -80,8 +99,4 @@ public class StudentFactory implements PersonFactory {
         }
     }
 
-    @Override
-    public boolean supports(String type) {
-        return "student".equalsIgnoreCase(type);
-    }
 }

@@ -6,14 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.example.inheritance.dto.command.CreatePersonCommand;
 import org.example.inheritance.dto.response.PersonResponse;
 import org.example.inheritance.model.Employee;
-import org.example.inheritance.model.Person;
 import org.example.inheritance.model.Student;
 import org.example.inheritance.repository.PersonRepository;
 import org.example.inheritance.service.PersonService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.function.EntityResponse;
 
 import java.util.List;
 
@@ -38,25 +35,21 @@ public class PersonController {
     }
 
     @GetMapping
-    public List<Person> getAll() {
-        return personRepository.findAll();
+    public ResponseEntity<List<PersonResponse>> getAll() {
+        return ResponseEntity.ok(personService.findAll());
     }
-
 
 
     // todo
     // chcemy dodac nowy endpoint w ktorym mozemy dodac dowolną osobe
     // UWAGA; powinna byc taka konstrukcja i taki kontrakt ze dodanie nowego typu osoby nie sprawi ze bede musial modywikowac istniejace klasy
     // tylko stworze nowe, dodajemy serwis
-    
+
     // na koniec mozesz dodac nowa osobe i zobaczyc czy nie musiz modyfikowac istnijacych klas
     //
     @PostMapping
     public ResponseEntity<PersonResponse> addPerson(@Valid @RequestBody CreatePersonCommand person) {
-
-
         PersonResponse personResponse = personService.createPerson(person);
-
 
         return ResponseEntity.ok(personResponse);
     }

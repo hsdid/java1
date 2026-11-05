@@ -1,40 +1,61 @@
 package org.example.inheritance.factory;
 
-import org.example.dto.response.ErrorDetail;
 import org.example.inheritance.dto.command.CreatePersonCommand;
+import org.example.inheritance.dto.response.EmployeeResponse;
 import org.example.inheritance.model.Employee;
-import org.example.inheritance.model.Person;
 import org.example.inheritance.model.PersonParameter;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
-public class EmployeeFactory implements PersonFactory {
+@Component("employeeFactory")
+public class EmployeeFactory implements PersonFactory<Employee, EmployeeResponse> {
+
+//    @Override
+//    public Person create(CreatePersonCommand command) {
+//        Employee employee = new Employee();
+//
+//        for (PersonParameter parameter : command.parameters()) {
+//            if (parameter.name().equals("salary")) {
+//                employee.setSalary(Integer.parseInt(parameter.value()));
+//            }
+//            if (parameter.name().equals("position")) {
+//                employee.setPosition(parameter.value());
+//            }
+//            if (parameter.name().equals("name")) {
+//                employee.setName(parameter.value());
+//            }
+//            if (parameter.name().equals("age")) {
+//                employee.setAge(Integer.parseInt(parameter.value()));
+//            }
+//        }
+//
+//
+//        return employee;
+//    }
+
+
     @Override
-    public Person create(CreatePersonCommand command) {
+    public Employee createPersonInternal(Map<String, String> parameters) {
         Employee employee = new Employee();
-
-        for (PersonParameter parameter : command.parameters()) {
-            if (parameter.name().equals("salary")) {
-                employee.setSalary(Integer.parseInt(parameter.value()));
-            }
-            if (parameter.name().equals("position")) {
-                employee.setPosition(parameter.value());
-            }
-            if (parameter.name().equals("name")) {
-                employee.setName(parameter.value());
-            }
-            if (parameter.name().equals("age")) {
-                employee.setAge(Integer.parseInt(parameter.value()));
-            }
-        }
-
-
+        employee.setSalary(Integer.parseInt(parameters.get("salary")));
+        employee.setAge(Integer.parseInt(parameters.get("age")));
+        employee.setName(parameters.get("name"));
+        employee.setPosition(parameters.get("position"));
         return employee;
+    }
+
+    @Override
+    public EmployeeResponse toResponse(Employee employee) {
+        return new EmployeeResponse(employee.getId(),
+                employee.getName(),
+                employee.getAge(),
+                employee.getPosition(),
+                employee.getSalary());
     }
 
     @Override
@@ -72,6 +93,7 @@ public class EmployeeFactory implements PersonFactory {
         return errors;
     }
 
+
     private boolean isNumeric(String value) {
         if (value == null) return false;
         try {
@@ -82,8 +104,4 @@ public class EmployeeFactory implements PersonFactory {
         }
     }
 
-    @Override
-    public boolean supports(String type) {
-        return "employee".equalsIgnoreCase(type);
-    }
 }
