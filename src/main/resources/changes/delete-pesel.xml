@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20261110-drop-pesel-student" author="mateusz">
+        <sql>
+            alter table if exists student drop column pesel
+        </sql>
+    </changeSet>
+    <changeSet id="20261110-drop-pesel-teacher" author="mateusz">
+        <sql>
+            alter table if exists teacher drop column pesel
+        </sql>
+    </changeSet>
+    <changeSet id="20261110-drop-pesel-employee" author="mateusz">
+        <sql>
+            alter table if exists employee drop column pesel
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

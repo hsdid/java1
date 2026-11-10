@@ -8,5 +8,8 @@
     <include file="/changes/insert-data.xml"/>
     <include file="/changes/add-number-of-page-column-to-book.xml"/>
     <include file="/changes/create-teacher-table.xml"/>
+    <include file="/changes/add-birth-date-and-gender-column.xml"/>
+    <include file="/changes/pesel-migration.xml"/>
+    <include file="/changes/delete-pesel.xml"/>
 
 </databaseChangeLog>

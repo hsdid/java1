@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+
+    <changeSet id="20261110-add-birth-date-column-to-student" author="mateusz">
+        <sql>
+            alter table if exists student add column birth_date date
+
+        </sql>
+    </changeSet>
+    <changeSet id="20261110-add-gender-column-to-student" author="mateusz">
+        <sql>
+            alter table if exists student add column gender varchar (10)
+
+        </sql>
+    </changeSet>
+    <changeSet id="20261110-add-birth-date-column-to-employee" author="mateusz">
+        <sql>
+            alter table if exists employee add column birth_date date
+
+        </sql>
+    </changeSet>
+    <changeSet id="20261110-add-gender-column-to-employee" author="mateusz">
+        <sql>
+            alter table if exists employee add column gender varchar (10)
+
+        </sql>
+    </changeSet>
+    <changeSet id="20261110-add-birth-date-column-to-teacher" author="mateusz">
+        <sql>
+            alter table if exists teacher add column birth_date date
+
+        </sql>
+    </changeSet>
+    <changeSet id="20261110-add-gender-column-to-teacher" author="mateusz">
+        <sql>
+            alter table if exists teacher add column gender varchar (10)
+
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
