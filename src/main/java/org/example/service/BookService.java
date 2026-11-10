@@ -26,17 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookService {
     private final BookRepository bookRepository;
     private final AuthorRepository authorRepository;
-    private final BookPageableSortTranslator sortTranslator;
-
-    @PostConstruct
-    public void init() {
-        Author a1 = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
-        Author a2 = authorRepository.saveAndFlush(new Author("Ewelina", "Damianska", 1900, 2000));
-        bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, a1));
-        bookRepository.saveAndFlush(new Book("Title2", "LEKTURA", true, a2));
-        bookRepository.saveAndFlush(new Book("Title3", "LEKTURA", true, a2));
-    }
-
 
     public BookResponse createBook(CreateBookRequest request) {
         Author author = authorRepository.findById(request.authorId())

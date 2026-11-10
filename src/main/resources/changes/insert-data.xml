@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20261106-insert-author" author="mateusz">
+        <sql>
+            insert into author (birth_year, death_year, first_name, last_name)
+            values (1999, 2010, 'Jacek', 'Jackowski')
+        </sql>
+    </changeSet>
+    <changeSet id="20261106-insert-book" author="mateusz">
+        <sql>
+            insert into book (author_id, available, category, title)
+            select id, true, 'Novel', 'Ksiazka1'
+            from author
+            where first_name = 'Jacek' and last_name = 'Jackowski'
+        </sql>
+        <sql>
+            insert into book (author_id, available, category, title)
+            select id, true, 'Novel', 'Ksiazka2'
+            from author
+            where first_name = 'Jacek' and last_name = 'Jackowski'
+        </sql>
+        <sql>
+            insert into book (author_id, available, category, title)
+            select id, true, 'Novel', 'Ksiazka3'
+            from author
+            where first_name = 'Jacek' and last_name = 'Jackowski'
+        </sql>
+    </changeSet>
+
+    <changeSet id="20261106-insert-employee" author="mateusz">
+        <sql>
+            insert into employee (id, age, name, position, salary)
+            values (next value for person_id_seq, 26, 'Mariusz', 'Menager', 10000)
+        </sql>
+        <sql>
+            insert into employee (id, age, name, position, salary)
+            values (next value for person_id_seq, 20, 'Dawid', 'Developer', 20000)
+        </sql>
+        <sql>
+            insert into employee (id, age, name, position, salary)
+            values (next value for person_id_seq, 36, 'Bartek', 'QA', 2400)
+        </sql>
+
+    </changeSet>
+    <changeSet id="20261106-insert-student" author="mateusz">
+        <sql>
+            insert into student (id, age, name, std_group, scholarship)
+            values (next value for person_id_seq, 20, 'Mateusz', 'A', 100)
+        </sql>
+        <sql>
+            insert into student (id, age, name, std_group, scholarship)
+            values (next value for person_id_seq, 21, 'Wiktor', 'A', 200)
+        </sql>
+        <sql>
+            insert into student (id, age, name, std_group, scholarship)
+            values (next value for person_id_seq, 22, 'Pawel', 'A', 300)
+        </sql>
+
+    </changeSet>
+
+    <!--     insert into author (birth_year,death_year,first_name,last_name,id) values (?,?,?,?,default)
+    Hibernate: insert into author (birth_year,death_year,first_name,last_name,id) values (?,?,?,?,default)
+    Hibernate: insert into book (author_id,available,category,title,id) values (?,?,?,?,default)
+    Hibernate: insert into book (author_id,available,category,title,id) values (?,?,?,?,default)
+    Hibernate: insert into book (author_id,available,category,title,id) values (?,?,?,?,default)
+    Hibernate: select next value for person_id_seq
+    Hibernate: select next value for person_id_seq
+
+    Hibernate: insert into employee (age,name,position,salary,id) values (?,?,?,?,?)
+    Hibernate: insert into employee (age,name,position,salary,id) values (?,?,?,?,?)
+    Hibernate: insert into employee (age,name,position,salary,id) values (?,?,?,?,?)
+    Hibernate: insert into student (age,name,std_group,scholarship,id) values (?,?,?,?,?)
+    Hibernate: insert into student (age,name,std_group,scholarship,id) values (?,?,?,?,?)
+    Hibernate: insert into student (age,name,std_group,scholarship,id) values (?,?,?,?,?)-->
+
+
+</databaseChangeLog>

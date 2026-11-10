@@ -1,10 +1,13 @@
 package org.example.inheritance.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import org.example.inheritance.dto.command.CreatePersonCommand;
 import org.example.inheritance.dto.response.PersonResponse;
 import org.example.inheritance.factory.PersonFactory;
+import org.example.inheritance.model.Employee;
 import org.example.inheritance.model.Person;
+import org.example.inheritance.model.Student;
 import org.example.inheritance.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

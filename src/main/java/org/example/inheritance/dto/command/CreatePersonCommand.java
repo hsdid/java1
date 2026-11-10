@@ -9,7 +9,6 @@ import org.example.inheritance.validation.ValidPersonParameters;
 
 import java.util.List;
 
-// todo nastepnie dodaj walidacje typu osoby
 @ValidPersonParameters
 public record CreatePersonCommand(
         @PersonType @NotBlank String personType,
