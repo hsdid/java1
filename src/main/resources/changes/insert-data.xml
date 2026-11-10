@@ -62,20 +62,5 @@
 
     </changeSet>
 
-    <!--     insert into author (birth_year,death_year,first_name,last_name,id) values (?,?,?,?,default)
-    Hibernate: insert into author (birth_year,death_year,first_name,last_name,id) values (?,?,?,?,default)
-    Hibernate: insert into book (author_id,available,category,title,id) values (?,?,?,?,default)
-    Hibernate: insert into book (author_id,available,category,title,id) values (?,?,?,?,default)
-    Hibernate: insert into book (author_id,available,category,title,id) values (?,?,?,?,default)
-    Hibernate: select next value for person_id_seq
-    Hibernate: select next value for person_id_seq
-
-    Hibernate: insert into employee (age,name,position,salary,id) values (?,?,?,?,?)
-    Hibernate: insert into employee (age,name,position,salary,id) values (?,?,?,?,?)
-    Hibernate: insert into employee (age,name,position,salary,id) values (?,?,?,?,?)
-    Hibernate: insert into student (age,name,std_group,scholarship,id) values (?,?,?,?,?)
-    Hibernate: insert into student (age,name,std_group,scholarship,id) values (?,?,?,?,?)
-    Hibernate: insert into student (age,name,std_group,scholarship,id) values (?,?,?,?,?)-->
-
 
 </databaseChangeLog>

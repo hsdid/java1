@@ -4,10 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.Instant;
 
 @Getter
 @Setter
@@ -27,12 +23,14 @@ public class Book {
 
     private String category;
     private boolean available;
+    private Integer numberOfPages;
 
-    public Book(String title, String category, boolean available, Author author) {
+    public Book(String title, String category, boolean available, Author author, Integer numberOfPages) {
         this.title = title;
         this.category = category;
         this.available = available;
         this.author = author;
+        this.numberOfPages = numberOfPages;
     }
 
     @Override

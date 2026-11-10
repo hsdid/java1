@@ -38,7 +38,8 @@ public class BookService {
                         request.title(),
                         request.category(),
                         true,
-                        author
+                        author,
+                        request.numberOfPages()
                 )
         );
 
