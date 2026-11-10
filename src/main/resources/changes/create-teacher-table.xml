@@ -13,6 +13,7 @@
                 salary         integer not null,
                 name           varchar(255),
                 specialization varchar(255),
+                pesel          varchar(11),
                 primary key (id)
             )
         </sql>

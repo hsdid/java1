@@ -46,6 +46,7 @@
                 salary   integer not null,
                 name     varchar(255),
                 position varchar(255),
+                pesel    varchar(11),
                 primary key (id)
             )
         </sql>
@@ -75,6 +76,7 @@
                 scholarship integer not null,
                 name        varchar(255),
                 std_group   varchar(255),
+                pesel       varchar(11),
                 primary key (id)
             )
         </sql>

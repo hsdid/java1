@@ -33,31 +33,31 @@
 
     <changeSet id="20261106-insert-employee" author="mateusz">
         <sql>
-            insert into employee (id, age, name, position, salary)
-            values (next value for person_id_seq, 26, 'Mariusz', 'Menager', 10000)
+            insert into employee (id, age, name, position, salary, pesel)
+            values (next value for person_id_seq, 26, 'Mariusz', 'Menager', 10000, '52040851197')
         </sql>
         <sql>
-            insert into employee (id, age, name, position, salary)
-            values (next value for person_id_seq, 20, 'Dawid', 'Developer', 20000)
+            insert into employee (id, age, name, position, salary, pesel)
+            values (next value for person_id_seq, 20, 'Dawid', 'Developer', 20000, '90051615456')
         </sql>
         <sql>
-            insert into employee (id, age, name, position, salary)
-            values (next value for person_id_seq, 36, 'Bartek', 'QA', 2400)
+            insert into employee (id, age, name, position, salary, pesel)
+            values (next value for person_id_seq, 36, 'Bartek', 'QA', 2400, '20320422074')
         </sql>
 
     </changeSet>
     <changeSet id="20261106-insert-student" author="mateusz">
         <sql>
-            insert into student (id, age, name, std_group, scholarship)
-            values (next value for person_id_seq, 20, 'Mateusz', 'A', 100)
+            insert into student (id, age, name, std_group, scholarship, pesel)
+            values (next value for person_id_seq, 20, 'Mateusz', 'A', 100, '13290497465')
         </sql>
         <sql>
-            insert into student (id, age, name, std_group, scholarship)
-            values (next value for person_id_seq, 21, 'Wiktor', 'A', 200)
+            insert into student (id, age, name, std_group, scholarship, pesel)
+            values (next value for person_id_seq, 21, 'Wiktor', 'A', 200, '23312633032')
         </sql>
         <sql>
-            insert into student (id, age, name, std_group, scholarship)
-            values (next value for person_id_seq, 22, 'Pawel', 'A', 300)
+            insert into student (id, age, name, std_group, scholarship, pesel)
+            values (next value for person_id_seq, 22, 'Pawel', 'A', 300, '03210495978')
         </sql>
 
     </changeSet>
