@@ -11,7 +11,8 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "person_type")
 public abstract class Person {
 
     @Id
@@ -20,7 +21,6 @@ public abstract class Person {
     private int id;
     private String name;
     private int age;
-    //private String pesel;
     @Enumerated(EnumType.STRING)
     @Column(length = 10)
     private Gender gender;

@@ -37,16 +37,20 @@
             )
         </sql>
     </changeSet>
-    <changeSet id="20261105-create-employee-table" author="mateusz">
+    <changeSet id="20261105-create-person-table" author="mateusz">
         <sql>
-            create table employee
+            create table person
             (
-                age      integer not null,
-                id       integer not null,
-                salary   integer not null,
-                name     varchar(255),
-                position varchar(255),
-                pesel    varchar(11),
+                person_type    varchar(31) not null,
+                id             integer     not null,
+                name           varchar(255),
+                age            integer     not null,
+                position       varchar(255),
+                salary         integer,
+                std_group      varchar(255),
+                scholarship    integer,
+                specialization varchar(255),
+                pesel          varchar(11),
                 primary key (id)
             )
         </sql>
@@ -63,20 +67,6 @@
                 submit_date   timestamp(6),
                 failed_reason varchar(255),
                 file_name     varchar(255),
-                primary key (id)
-            )
-        </sql>
-    </changeSet>
-    <changeSet id="20261105-create-student-table" author="mateusz">
-        <sql>
-            create table student
-            (
-                age         integer not null,
-                id          integer not null,
-                scholarship integer not null,
-                name        varchar(255),
-                std_group   varchar(255),
-                pesel       varchar(11),
                 primary key (id)
             )
         </sql>

@@ -5,40 +5,12 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 
-    <changeSet id="20261110-add-birth-date-column-to-student" author="mateusz">
+    <changeSet id="20261110-add-birth-date-and-gender-column-to-person" author="mateusz">
         <sql>
-            alter table if exists student add column birth_date date
-
+            alter table if exists person add column birth_date date
         </sql>
-    </changeSet>
-    <changeSet id="20261110-add-gender-column-to-student" author="mateusz">
         <sql>
-            alter table if exists student add column gender varchar (10)
-
-        </sql>
-    </changeSet>
-    <changeSet id="20261110-add-birth-date-column-to-employee" author="mateusz">
-        <sql>
-            alter table if exists employee add column birth_date date
-
-        </sql>
-    </changeSet>
-    <changeSet id="20261110-add-gender-column-to-employee" author="mateusz">
-        <sql>
-            alter table if exists employee add column gender varchar (10)
-
-        </sql>
-    </changeSet>
-    <changeSet id="20261110-add-birth-date-column-to-teacher" author="mateusz">
-        <sql>
-            alter table if exists teacher add column birth_date date
-
-        </sql>
-    </changeSet>
-    <changeSet id="20261110-add-gender-column-to-teacher" author="mateusz">
-        <sql>
-            alter table if exists teacher add column gender varchar (10)
-
+            alter table if exists person add column gender varchar(10)
         </sql>
     </changeSet>
 
