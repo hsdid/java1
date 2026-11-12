@@ -31,7 +31,7 @@ public class BookController {
 //    }
 
     @GetMapping
-    public ResponseEntity<Page<BookResponse>> getBooks(@PageableDefault Pageable pageable){
+    public ResponseEntity<Page<BookResponse>> getBooks(@PageableDefault Pageable pageable) {
         log.info("findAllBooks()");
         return ResponseEntity.ok(bookService.getAllBooks(pageable));
 

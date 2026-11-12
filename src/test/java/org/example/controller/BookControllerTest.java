@@ -109,15 +109,15 @@ class BookControllerTest {
         });
 
         assertThat(books).hasSize(3)
-                .extracting(BookResponse::title)
+                .extracting(BookResponse::getTitle)
                 .containsExactlyInAnyOrder("Title1", "Title2", "Title3");
 
         assertThat(books).allSatisfy(bookResponse -> {
-            assertNotNull(bookResponse.id());
-            assertNotNull(bookResponse.title());
-            assertNotNull(bookResponse.authorId());
-            assertNotNull(bookResponse.category());
-            assertEquals(author.getId(), bookResponse.authorId());
+            assertNotNull(bookResponse.getId());
+            assertNotNull(bookResponse.getTitle());
+            assertNotNull(bookResponse.getAuthorId());
+            assertNotNull(bookResponse.getCategory());
+            assertEquals(author.getId(), bookResponse.getAuthorId());
         });
     }
 
@@ -129,7 +129,8 @@ class BookControllerTest {
         CreateBookRequest dto = new CreateBookRequest(
                 "Pan Tadeusz",
                 author.getId(),
-                "Lektura"
+                "Lektura",
+                1
         );
 
         String requestBody = objectMapper.writeValueAsString(dto);
@@ -142,24 +143,24 @@ class BookControllerTest {
 
         BookResponse responseDto = objectMapper.readValue(responseJson, BookResponse.class);
 
-        Book savedBook = bookRepository.findById(responseDto.id()).get();
+        Book savedBook = bookRepository.findById(responseDto.getId()).get();
 
         Assertions.assertEquals(dto.title(), savedBook.getTitle());
 
 
-        postman.perform(get("/api/v1/books/" + +responseDto.id()))
+        postman.perform(get("/api/v1/books/" + +responseDto.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(responseDto.id()))
-                .andExpect(jsonPath("$.title").value(responseDto.title()))
-                .andExpect(jsonPath("$.category").value(responseDto.category()))
-                .andExpect(jsonPath("$.authorId").value(responseDto.authorId()))
-                .andExpect(jsonPath("$.available").value(responseDto.available()));
+                .andExpect(jsonPath("$.id").value(responseDto.getId()))
+                .andExpect(jsonPath("$.title").value(responseDto.getTitle()))
+                .andExpect(jsonPath("$.category").value(responseDto.getCategory()))
+                .andExpect(jsonPath("$.authorId").value(responseDto.getAuthorId()))
+                .andExpect(jsonPath("$.available").value(responseDto.isAvailable()));
     }
 
     @Test
     void shouldUpdateBook() throws Exception {
         Author author = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
-        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author));
+        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author, 1));
         Long id = book.getId();
 
         UpdateBookRequest dto = new UpdateBookRequest("Zmieniony Tytuł", "POEZJA", false);
@@ -182,7 +183,7 @@ class BookControllerTest {
     @Test
     void shouldPartialUpdateBook() throws Exception {
         Author author = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
-        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author));
+        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author, 1));
         Long id = book.getId();
 
         PatchBookRequest dto = new PatchBookRequest(null, "NOWA_KATEGORIA", null);
@@ -203,7 +204,7 @@ class BookControllerTest {
     @Test
     void shouldDeleteBook() throws Exception {
         Author author = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
-        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author));
+        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author, 1));
         Long id = book.getId();
 
         postman.perform(delete("/api/v1/books/" + +id))
@@ -259,9 +260,9 @@ class BookControllerTest {
     @Test
     void shouldReturn400WhenTitleAlreadyExists() throws Exception {
         Author author = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
-        bookRepository.saveAndFlush(new Book("Zajety Tytul", "LEKTURA", true, author));
+        bookRepository.saveAndFlush(new Book("Zajety Tytul", "LEKTURA", true, author, 1));
 
-        CreateBookRequest dto = new CreateBookRequest("Zajety Tytul", author.getId(), "LEKTURA");
+        CreateBookRequest dto = new CreateBookRequest("Zajety Tytul", author.getId(), "LEKTURA", 1);
         String requestBody = objectMapper.writeValueAsString(dto);
 
         postman.perform(post("/api/v1/books")
@@ -275,7 +276,7 @@ class BookControllerTest {
 
     @Test
     void shouldReturn400WhenCreateBookRequestIsInvalid() throws Exception {
-        CreateBookRequest dto = new CreateBookRequest("", null, "");
+        CreateBookRequest dto = new CreateBookRequest("", null, "", 1);
         String requestBody = objectMapper.writeValueAsString(dto);
 
         postman.perform(post("/api/v1/books")
@@ -294,17 +295,17 @@ class BookControllerTest {
     void shouldSortByAuthorIdFieldThatIsNotInEntity() throws Exception {
         Author first = authorRepository.saveAndFlush(new Author("First", "Sorter", 1900, 2000));
         Author second = authorRepository.saveAndFlush(new Author("Second", "Sorter", 1901, 2001));
-        bookRepository.saveAndFlush(new Book("SortBookFirst", "LEKTURA", true, first));
-        bookRepository.saveAndFlush(new Book("SortBookSecond", "LEKTURA", true, second));
+        bookRepository.saveAndFlush(new Book("SortBookFirst", "LEKTURA", true, first, 1));
+        bookRepository.saveAndFlush(new Book("SortBookSecond", "LEKTURA", true, second,1 ));
 
         List<BookResponse> desc = getBooksSortedBy("authorId,desc");
-        List<Long> descAuthorIds = desc.stream().map(BookResponse::authorId).toList();
+        List<Long> descAuthorIds = desc.stream().map(BookResponse::getAuthorId).toList();
         assertThat(descAuthorIds).isSortedAccordingTo(Comparator.reverseOrder());
         assertThat(indexOfAuthorId(desc, second.getId()))
                 .isLessThan(indexOfAuthorId(desc, first.getId()));
 
         List<BookResponse> asc = getBooksSortedBy("authorId,asc");
-        List<Long> ascAuthorIds = asc.stream().map(BookResponse::authorId).toList();
+        List<Long> ascAuthorIds = asc.stream().map(BookResponse::getAuthorId).toList();
         assertThat(ascAuthorIds).isSorted();
         assertThat(indexOfAuthorId(asc, first.getId()))
                 .isLessThan(indexOfAuthorId(asc, second.getId()));
@@ -314,23 +315,23 @@ class BookControllerTest {
     void shouldFilterBooksByEachField() throws Exception {
         Author author = authorRepository.saveAndFlush(new Author("Filter", "Owner", 1900, 2000));
         Author other = authorRepository.saveAndFlush(new Author("Other", "Owner", 1901, 2001));
-        bookRepository.saveAndFlush(new Book("UniqueFilterTitle", "UNIQUE_CAT", true, author));
-        bookRepository.saveAndFlush(new Book("AnotherFilterBook", "OTHER_CAT", false, other));
+        bookRepository.saveAndFlush(new Book("UniqueFilterTitle", "UNIQUE_CAT", true, author,1 ));
+        bookRepository.saveAndFlush(new Book("AnotherFilterBook", "OTHER_CAT", false, other, 1));
 
         List<BookResponse> byTitle = getBooksFiltered(Map.of("title", "UniqueFilterTitle"));
-        assertThat(byTitle).extracting(BookResponse::title).containsExactly("UniqueFilterTitle");
+        assertThat(byTitle).extracting(BookResponse::getTitle).containsExactly("UniqueFilterTitle");
 
         List<BookResponse> byCategory = getBooksFiltered(Map.of("category", "UNIQUE_CAT"));
         assertThat(byCategory).isNotEmpty()
-                .extracting(BookResponse::category).containsOnly("UNIQUE_CAT");
+                .extracting(BookResponse::getCategory).containsOnly("UNIQUE_CAT");
 
         List<BookResponse> byAuthor = getBooksFiltered(Map.of("authorId", author.getId().toString()));
         assertThat(byAuthor).isNotEmpty()
-                .extracting(BookResponse::authorId).containsOnly(author.getId());
+                .extracting(BookResponse::getAuthorId).containsOnly(author.getId());
 
         List<BookResponse> byAvailable = getBooksFiltered(Map.of("available", "false"));
         assertThat(byAvailable).isNotEmpty()
-                .extracting(BookResponse::available).containsOnly(false);
+                .extracting(BookResponse::isAvailable).containsOnly(false);
 
         List<BookResponse> combined = getBooksFiltered(Map.of(
                 "title", "UniqueFilterTitle",
@@ -338,7 +339,7 @@ class BookControllerTest {
                 "authorId", author.getId().toString(),
                 "available", "true"
         ));
-        assertThat(combined).extracting(BookResponse::title).containsExactly("UniqueFilterTitle");
+        assertThat(combined).extracting(BookResponse::getTitle).containsExactly("UniqueFilterTitle");
     }
 
     @Test
@@ -380,7 +381,7 @@ class BookControllerTest {
 
     private int indexOfAuthorId(List<BookResponse> books, Long authorId) {
         for (int i = 0; i < books.size(); i++) {
-            if (books.get(i).authorId().equals(authorId)) {
+            if (books.get(i).getAuthorId().equals(authorId)) {
                 return i;
             }
         }
@@ -390,7 +391,7 @@ class BookControllerTest {
     @Test
     void shouldReturn400WhenUpdateRequestIsInvalid() throws Exception {
         Author author = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
-        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author));
+        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author, 1));
 
         UpdateBookRequest dto = new UpdateBookRequest("X", "", null);
         String requestBody = objectMapper.writeValueAsString(dto);

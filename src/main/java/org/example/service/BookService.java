@@ -93,26 +93,8 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public Page<BookResponse> getAllBooks(Pageable pageable) {
-       return bookRepository.findAll(pageable).map(BookResponse::from);
+        return bookRepository.findAll(pageable).map(BookResponse::from);
     }
-//
-//    @Transactional(readOnly = true)
-//    public Page<BookResponse> getAll(
-//            Pageable pageable,
-//            String title,
-//            String category,
-//            Long authorId,
-//            Boolean available
-//    ) {
-//        Pageable sort = sortTranslator.translate(pageable);
-//
-//        Specification<Book> spec = Specification.where(BookSpecifications.hasTitle(title))
-//                .and(BookSpecifications.hasCategory(category))
-//                .and(BookSpecifications.hasAuthorId(authorId))
-//                .and(BookSpecifications.isAvailable(available));
-//
-//        return bookRepository.findAll(spec, sort).map(BookResponse::from);
-//    }
 
     @Transactional(readOnly = true)
     public BookResponse getById(Long id) {

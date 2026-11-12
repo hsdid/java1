@@ -5,9 +5,11 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.request.CreateAuthorRequest;
 import org.example.dto.response.AuthorResponse;
+import org.example.dto.response.BookResponse;
 import org.example.exception.AuthorNotFoundException;
 import org.example.model.Author;
 import org.example.repository.AuthorRepository;
+import org.example.repository.BookRepository;
 import org.example.support.AuthorPageableSortTranslator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,12 +18,14 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class AuthorService {
     private final AuthorRepository authorRepository;
+    private final BookRepository bookRepository;
     private final AuthorPageableSortTranslator sortTranslator;
 
 
@@ -40,10 +44,15 @@ public class AuthorService {
 //    }
 
     // metoda zwraca authorow z iloscią ksiązek bez n + 1
+//    @Transactional(readOnly = true)
+//    public Page<AuthorResponse> getAll(Pageable pageable) {
+////        Pageable pageableTranslated = sortTranslator.translate(pageable);
+//        return authorRepository.findAllWithBooks(pageable).map(AuthorResponse::addLinks);
+//    }
+
     @Transactional(readOnly = true)
-    public Page<AuthorResponse> getAll(Pageable pageable) {
-//        Pageable pageableTranslated = sortTranslator.translate(pageable);
-        return authorRepository.findAllWithBooks(pageable);
+    public List<AuthorResponse> getAll() {
+        return authorRepository.findAll().stream().map(AuthorResponse::from).toList();
     }
 
     @Transactional(readOnly = true, isolation = Isolation.READ_UNCOMMITTED)
@@ -54,6 +63,11 @@ public class AuthorService {
                 ));
 
         return AuthorResponse.from(author);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookResponse> getAllBooksForAuthor(Long id) {
+        return bookRepository.findAllByAuthorId(id).stream().map(BookResponse::from).toList();
     }
 
     /// /    @Transactional
@@ -156,7 +170,6 @@ public class AuthorService {
     // SNEAKY THROWS
     // @SneakyThrows sprawia, że wyjątek checked (np. Exception) zachowuje się w locie bajtowym jak wyjątek niesprawdzany,
     // Spring potraktuje go tak samo jak RuntimeException i wykona wycofanie transakcji (rollback).
-
     @Transactional
     @SneakyThrows
     public void playWithTransactions() {

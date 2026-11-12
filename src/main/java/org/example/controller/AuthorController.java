@@ -2,12 +2,20 @@ package org.example.controller;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.example.assembler.AuthorModelAssembler;
+import org.example.assembler.BookModelAssembler;
 import org.example.dto.request.CreateAuthorRequest;
 import org.example.dto.response.AuthorResponse;
+import org.example.dto.response.BookResponse;
+import org.example.model.Book;
 import org.example.service.AuthorService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.hateoas.Link;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +29,8 @@ import java.util.List;
 public class AuthorController {
 
     private final AuthorService authorService;
+    private final AuthorModelAssembler authorModelAssembler;
+    private final BookModelAssembler bookModelAssembler;
 
     @GetMapping("/test")
     public void test() throws IOException {
@@ -35,14 +45,32 @@ public class AuthorController {
         return authorService.create(request);
     }
 
+//    @GetMapping
+//    public ResponseEntity<Page<AuthorResponse>> getAuthors(@PageableDefault Pageable pageable) {
+//        return ResponseEntity.ok(authorService.getAll(pageable));
+//    }
+
     @GetMapping
-    public ResponseEntity<Page<AuthorResponse>> getAuthors(@PageableDefault Pageable pageable) {
-        return ResponseEntity.ok(authorService.getAll(pageable));
+    public ResponseEntity<List<AuthorResponse>> getAuthors() {
+
+        return ResponseEntity.ok(authorService.getAll());
     }
 
     @GetMapping("/{id}")
-    public AuthorResponse getAuthor(@PathVariable Long id) {
+    public ResponseEntity<AuthorResponse> getAuthor(@PathVariable Long id) {
 
-        return authorService.getById(id);
+        AuthorResponse author = authorService.getById(id);
+
+        return ResponseEntity.ok(authorModelAssembler.toModel(author));
+    }
+
+    @GetMapping("/{id}/books")
+    public ResponseEntity<List<BookResponse>> getAuthorBooks(@PathVariable Long id) {
+        List<BookResponse> books = authorService.getAllBooksForAuthor(id);
+
+        return ResponseEntity.ok(books.stream()
+                .map(bookModelAssembler::toModel)
+                .toList()
+        );
     }
 }

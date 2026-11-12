@@ -64,7 +64,7 @@ class AuthorControllerTest {
                 .getContentAsString();
 
         List<AuthorResponse> firstPage = readContent(firstPageBody);
-        assertThat(firstPage).extracting(AuthorResponse::id)
+        assertThat(firstPage).extracting(AuthorResponse::getId)
                 .containsExactly(a4.getId(), a3.getId());
 
         String secondPageBody = postman.perform(get("/api/v1/authors")
@@ -80,7 +80,7 @@ class AuthorControllerTest {
                 .getContentAsString();
 
         List<AuthorResponse> secondPage = readContent(secondPageBody);
-        assertThat(secondPage).extracting(AuthorResponse::id)
+        assertThat(secondPage).extracting(AuthorResponse::getId)
                 .containsExactly(a2.getId(), a1.getId());
 
         String thirdPageBody = postman.perform(get("/api/v1/authors")
@@ -95,7 +95,7 @@ class AuthorControllerTest {
                 .getContentAsString();
 
         List<AuthorResponse> thirdPage = readContent(thirdPageBody);
-        assertThat(thirdPage).extracting(AuthorResponse::id).contains(a0.getId());
+        assertThat(thirdPage).extracting(AuthorResponse::getId).contains(a0.getId());
     }
 
     @Test
@@ -132,21 +132,21 @@ class AuthorControllerTest {
     @Test
     void shouldSortByNumberOfBooksFieldThatIsNotInEntity() throws Exception {
         Author fewBooks = authorRepository.saveAndFlush(new Author("Ala", "FewBooks", 1900, 2000));
-        bookRepository.saveAndFlush(new Book("FewBook1", "LEKTURA", true, fewBooks));
+        bookRepository.saveAndFlush(new Book("FewBook1", "LEKTURA", true, fewBooks, 1));
 
         Author manyBooks = authorRepository.saveAndFlush(new Author("Bea", "ManyBooks", 1901, 2001));
-        bookRepository.saveAndFlush(new Book("ManyBook1", "LEKTURA", true, manyBooks));
-        bookRepository.saveAndFlush(new Book("ManyBook2", "LEKTURA", true, manyBooks));
-        bookRepository.saveAndFlush(new Book("ManyBook3", "LEKTURA", true, manyBooks));
+        bookRepository.saveAndFlush(new Book("ManyBook1", "LEKTURA", true, manyBooks, 1));
+        bookRepository.saveAndFlush(new Book("ManyBook2", "LEKTURA", true, manyBooks, 1));
+        bookRepository.saveAndFlush(new Book("ManyBook3", "LEKTURA", true, manyBooks, 1));
 
         List<AuthorResponse> desc = getAuthorsSortedBy("numberOfBooks,desc");
-        List<Integer> descCounts = desc.stream().map(AuthorResponse::numberOfBooks).toList();
+        List<Integer> descCounts = desc.stream().map(AuthorResponse::getNumberOfBooks).toList();
         assertThat(descCounts).isSortedAccordingTo(Comparator.reverseOrder());
         assertThat(indexOfAuthor(desc, manyBooks.getId()))
                 .isLessThan(indexOfAuthor(desc, fewBooks.getId()));
 
         List<AuthorResponse> asc = getAuthorsSortedBy("numberOfBooks,asc");
-        List<Integer> ascCounts = asc.stream().map(AuthorResponse::numberOfBooks).toList();
+        List<Integer> ascCounts = asc.stream().map(AuthorResponse::getNumberOfBooks).toList();
         assertThat(ascCounts).isSorted();
         assertThat(indexOfAuthor(asc, fewBooks.getId()))
                 .isLessThan(indexOfAuthor(asc, manyBooks.getId()));
@@ -166,7 +166,7 @@ class AuthorControllerTest {
 
     private int indexOfAuthor(List<AuthorResponse> authors, Long id) {
         for (int i = 0; i < authors.size(); i++) {
-            if (authors.get(i).id().equals(id)) {
+            if (authors.get(i).getId().equals(id)) {
                 return i;
             }
         }
