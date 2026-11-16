@@ -72,6 +72,14 @@ public class BookController {
         bookService.delete(id);
     }
 
+    //todo
+    // chcemy zrobic edycje książki, ale taką zeby nie występował lost update
+    // mozesz sprawdzic testem integracyjnym co sie stanie jak przekazesz starsza wersje
+    // nowszą wersje
+    // powinien polecienc wyjatek ObjectOptimisticLockingFailure
+
+    // chcemy zeby edycja mial maks 2 zapytania
+
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateBook(

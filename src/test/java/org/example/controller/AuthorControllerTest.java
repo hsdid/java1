@@ -110,8 +110,8 @@ class AuthorControllerTest {
     @Test
     void shouldReturnNumberOfBooksForEachAuthor() throws Exception {
         Author author = authorRepository.saveAndFlush(new Author("With", "Books", 1900, 2000));
-        bookRepository.saveAndFlush(new Book("PagedBook1", "LEKTURA", true, author));
-        bookRepository.saveAndFlush(new Book("PagedBook2", "LEKTURA", true, author));
+        bookRepository.saveAndFlush(new Book("PagedBook1", "LEKTURA", true, author, 1));
+        bookRepository.saveAndFlush(new Book("PagedBook2", "LEKTURA", true, author, 1));
 
         String body = postman.perform(get("/api/v1/authors")
                         .param("size", "1")
@@ -132,12 +132,12 @@ class AuthorControllerTest {
     @Test
     void shouldSortByNumberOfBooksFieldThatIsNotInEntity() throws Exception {
         Author fewBooks = authorRepository.saveAndFlush(new Author("Ala", "FewBooks", 1900, 2000));
-        bookRepository.saveAndFlush(new Book("FewBook1", "LEKTURA", true, fewBooks));
+        bookRepository.saveAndFlush(new Book("FewBook1", "LEKTURA", true, fewBooks, 1));
 
         Author manyBooks = authorRepository.saveAndFlush(new Author("Bea", "ManyBooks", 1901, 2001));
-        bookRepository.saveAndFlush(new Book("ManyBook1", "LEKTURA", true, manyBooks));
-        bookRepository.saveAndFlush(new Book("ManyBook2", "LEKTURA", true, manyBooks));
-        bookRepository.saveAndFlush(new Book("ManyBook3", "LEKTURA", true, manyBooks));
+        bookRepository.saveAndFlush(new Book("ManyBook1", "LEKTURA", true, manyBooks, 1));
+        bookRepository.saveAndFlush(new Book("ManyBook2", "LEKTURA", true, manyBooks, 1));
+        bookRepository.saveAndFlush(new Book("ManyBook3", "LEKTURA", true, manyBooks, 1));
 
         List<AuthorResponse> desc = getAuthorsSortedBy("numberOfBooks,desc");
         List<Integer> descCounts = desc.stream().map(AuthorResponse::numberOfBooks).toList();
