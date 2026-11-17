@@ -24,6 +24,8 @@ public class Book {
     private String category;
     private boolean available;
     private Integer numberOfPages;
+    @Version
+    private Integer version;
 
     public Book(String title, String category, boolean available, Author author, Integer numberOfPages) {
         this.title = title;

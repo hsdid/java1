@@ -3,6 +3,7 @@ package org.example.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.dto.request.BuyBookRequest;
 import org.example.dto.request.CreateBookRequest;
 import org.example.dto.request.PatchBookRequest;
 import org.example.dto.request.UpdateBookRequest;
@@ -31,7 +32,7 @@ public class BookController {
 //    }
 
     @GetMapping
-    public ResponseEntity<Page<BookResponse>> getBooks(@PageableDefault Pageable pageable){
+    public ResponseEntity<Page<BookResponse>> getBooks(@PageableDefault Pageable pageable) {
         log.info("findAllBooks()");
         return ResponseEntity.ok(bookService.getAllBooks(pageable));
 
@@ -96,6 +97,12 @@ public class BookController {
             @PathVariable Long id
     ) {
         bookService.partialUpdate(request, id);
+    }
+
+    @PostMapping("buy")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void buyBook(@Valid @RequestBody BuyBookRequest request) {
+        bookService.buyBook(request);
     }
 
 }

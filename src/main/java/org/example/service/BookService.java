@@ -3,11 +3,13 @@ package org.example.service;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.dto.request.BuyBookRequest;
 import org.example.dto.request.CreateBookRequest;
 import org.example.dto.request.PatchBookRequest;
 import org.example.dto.request.UpdateBookRequest;
 import org.example.dto.response.BookResponse;
 import org.example.exception.AuthorNotFoundException;
+import org.example.exception.BookNotAvailableOrNotFoundException;
 import org.example.exception.BookNotFoundException;
 import org.example.exception.BookTitleAlreadyExistsException;
 import org.example.model.Author;
@@ -19,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -67,6 +71,14 @@ public class BookService {
         book.setTitle(request.title());
         book.setAvailable(request.available());
         book.setCategory(request.category());
+    }
+
+    @Transactional
+    public void buyBook(BuyBookRequest request) {
+        Book book = bookRepository.findAvailableBookByIdPessimisticLock(request.bookId())
+                .orElseThrow(BookNotAvailableOrNotFoundException::new);
+
+        book.setAvailable(false);
     }
 
     @Transactional

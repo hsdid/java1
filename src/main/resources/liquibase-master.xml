@@ -10,5 +10,6 @@
     <include file="/changes/add-birth-date-and-gender-column.xml"/>
     <include file="/changes/pesel-migration.xml"/>
     <include file="/changes/delete-pesel.xml"/>
+    <include file="/changes/add-version-column-to-book.xml"/>
 
 </databaseChangeLog>

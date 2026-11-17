@@ -1,17 +1,18 @@
 package org.example.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.Main;
-import org.example.dto.request.CreateBookRequest;
-import org.example.dto.request.PatchBookRequest;
-import org.example.dto.request.UpdateBookRequest;
+import org.example.dto.request.*;
+import org.example.dto.response.AuthorResponse;
 import org.example.dto.response.BookResponse;
 import org.example.model.Author;
 import org.example.model.Book;
 import org.example.repository.AuthorRepository;
 import org.example.repository.BookRepository;
+import org.example.service.BookService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +25,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import jakarta.persistence.EntityManagerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -53,7 +60,128 @@ class BookControllerTest {
     private MockMvc postman;
 
     @Autowired
+    private BookService bookService;
+
+    @Autowired
     private EntityManagerFactory entityManagerFactory;
+
+
+    @Test
+    void shouldReturnConflictWhenConcurrentUpdatesUseTheSameVersion() throws Exception {
+        Author author = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
+        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author, 10));
+
+
+        UpdateBookRequest updateRequest = new UpdateBookRequest(
+                "Pan Tadeusz - Wydanie Specjalne",
+                "Klasyka",
+                true
+        );
+        String updateRequestBody = objectMapper.writeValueAsString(updateRequest);
+
+        int numberOfThreads = 3;
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger conflictCount = new AtomicInteger(0);
+        java.util.concurrent.CopyOnWriteArrayList<String> conflictBodies = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        for (int i = 0; i < numberOfThreads; i++) {
+            executorService.submit(() -> {
+                try {
+                    latch.await();
+
+                    MvcResult result = postman.perform(put("/api/v1/books/" + book.getId())
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(updateRequestBody))
+                            .andReturn();
+
+                    int statusCode = result.getResponse().getStatus();
+                    if (statusCode == 204) {
+                        successCount.incrementAndGet();
+                    } else if (statusCode == 409) {
+                        conflictBodies.add(result.getResponse().getContentAsString());
+                        conflictCount.incrementAndGet();
+                    }
+                } catch (Exception e) {
+                }
+            });
+        }
+
+        latch.countDown();
+
+        executorService.shutdown();
+        boolean finished = executorService.awaitTermination(5, TimeUnit.SECONDS);
+        assertThat(finished).isTrue();
+
+        assertThat(successCount.get()).isEqualTo(1);
+        assertThat(conflictCount.get()).isEqualTo(2);
+        assertThat(conflictBodies).hasSize(2);
+        JsonNode conflictBody = objectMapper.readTree(conflictBodies.get(0));
+        assertThat(conflictBody.get("status").asInt()).isEqualTo(409);
+        assertThat(conflictBody.get("message").asText()).isEqualTo("Book was modified by another transaction");
+    }
+
+    @Test
+    void shouldSellBookOnlyOnceWhenBoughtConcurrently() throws Exception {
+        Author author = authorRepository.saveAndFlush(new Author("Adam", "Adamski", 1900, 2000));
+        Book book = bookRepository.saveAndFlush(new Book("Title1", "LEKTURA", true, author, 10));
+
+        int numberOfThreads = 3;
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        CountDownLatch latch = new CountDownLatch(1);
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger conflictCount = new AtomicInteger(0);
+        java.util.concurrent.CopyOnWriteArrayList<String> conflictBodies = new java.util.concurrent.CopyOnWriteArrayList<>();
+        java.util.concurrent.CopyOnWriteArrayList<String> unexpectedResponses = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+        BuyBookRequest buyBookRequest = new BuyBookRequest(book.getId());
+
+
+        for (int i = 0; i < numberOfThreads; i++) {
+            executorService.submit(() -> {
+                try {
+                    latch.await();
+
+                    MvcResult result = postman.perform(post("/api/v1/books/buy")
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(objectMapper.writeValueAsString(buyBookRequest)))
+                            .andReturn();
+
+                    int statusCode = result.getResponse().getStatus();
+                    if (statusCode == 204) {
+                        successCount.incrementAndGet();
+                    } else if (statusCode == 409) {
+                        conflictBodies.add(result.getResponse().getContentAsString());
+                        conflictCount.incrementAndGet();
+                    } else {
+                        unexpectedResponses.add(statusCode + " " + result.getResponse().getContentAsString());
+                    }
+                } catch (Exception e) {
+                    unexpectedResponses.add(e.getClass().getName() + ": " + e.getMessage());
+                }
+            });
+        }
+
+        latch.countDown();
+
+        executorService.shutdown();
+        boolean finished = executorService.awaitTermination(5, TimeUnit.SECONDS);
+        assertThat(finished).isTrue();
+        assertThat(unexpectedResponses).as("unexpected responses: %s", unexpectedResponses).isEmpty();
+
+        assertThat(successCount.get()).isEqualTo(1);
+        assertThat(conflictCount.get()).isEqualTo(2);
+        assertThat(conflictBodies).hasSize(2);
+        JsonNode conflictBody = objectMapper.readTree(conflictBodies.get(0));
+        assertThat(conflictBody.get("status").asInt()).isEqualTo(409);
+        assertThat(conflictBody.get("message").asText()).isEqualTo("Book not available");
+
+        Book boughtBook = bookRepository.findById(book.getId()).orElseThrow();
+        assertThat(boughtBook.isAvailable()).isFalse();
+    }
 
     @Test
     void shouldNotProduceNPlusOneQueriesWhenListingBooks() throws Exception {
