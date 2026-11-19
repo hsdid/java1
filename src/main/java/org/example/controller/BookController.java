@@ -15,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.function.EntityResponse;
 
 @RequiredArgsConstructor
 @RestController
@@ -100,9 +101,11 @@ public class BookController {
     }
 
     @PostMapping("buy")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void buyBook(@Valid @RequestBody BuyBookRequest request) {
-        bookService.buyBook(request);
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<BookResponse> buyBook(@Valid @RequestBody BuyBookRequest request) {
+        BookResponse book = bookService.buyBook(request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(book);
     }
 
 }

@@ -74,11 +74,13 @@ public class BookService {
     }
 
     @Transactional
-    public void buyBook(BuyBookRequest request) {
+    public BookResponse buyBook(BuyBookRequest request) {
         Book book = bookRepository.findAvailableBookByIdPessimisticLock(request.bookId())
                 .orElseThrow(BookNotAvailableOrNotFoundException::new);
 
         book.setAvailable(false);
+
+        return BookResponse.from(book);
     }
 
     @Transactional
